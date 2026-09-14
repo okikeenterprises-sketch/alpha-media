@@ -68,7 +68,7 @@ export const listAdminProjects = createServerFn({ method: "GET" })
 
 export const saveProject = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => projectInput.parse(data))
+  .validator((data: unknown) => projectInput.parse(data))
   .handler(async ({ context, data }) => {
     const { id, ...fields } = data;
     if (id) {
@@ -87,7 +87,7 @@ export const saveProject = createServerFn({ method: "POST" })
 
 export const deleteProject = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     const { error } = await context.supabase.from("projects").delete().eq("id", data.id);
     if (error) throw error;
