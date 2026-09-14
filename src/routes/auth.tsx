@@ -57,16 +57,18 @@ function AuthPage() {
 
   return (
     <div className="mx-auto max-w-md px-5 py-24">
-      <h1 className="font-display text-6xl leading-none">
-        Studio <span className="italic text-primary">access</span>
-      </h1>
-      <p className="mt-4 text-sm text-muted-foreground">
-        Private dashboard for managing the work archive.
-      </p>
+      <div className="text-center">
+        <h1 className="font-display text-5xl leading-none md:text-6xl">
+          Studio <span className="italic text-primary drop-shadow-[0_0_15px_rgba(255,107,0,0.5)]">access</span>
+        </h1>
+        <p className="mt-4 text-sm text-muted-foreground">
+          Private dashboard for managing the work archive.
+        </p>
+      </div>
 
-      <form onSubmit={onSubmit} className="mt-10 space-y-4 border-2 border-foreground p-6">
+      <form onSubmit={onSubmit} className="glass-panel mt-10 space-y-5 rounded-3xl p-8 border border-white/10 shadow-2xl">
         <div>
-          <label className="text-xs font-semibold uppercase tracking-[0.2em]" htmlFor="email">
+          <label className="text-xs font-semibold uppercase tracking-[0.2em] text-primary" htmlFor="email">
             Email
           </label>
           <input
@@ -76,11 +78,12 @@ function AuthPage() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-2 w-full border-2 border-foreground bg-background px-3 py-2 outline-none focus:border-primary"
+            className="mt-2 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-foreground outline-none transition-all focus:border-primary/60 focus:bg-white/[0.08] focus:shadow-[0_0_20px_rgba(255,107,0,0.2)]"
+            placeholder="admin@alphamedia.studio"
           />
         </div>
         <div>
-          <label className="text-xs font-semibold uppercase tracking-[0.2em]" htmlFor="password">
+          <label className="text-xs font-semibold uppercase tracking-[0.2em] text-primary" htmlFor="password">
             Password
           </label>
           <input
@@ -91,20 +94,21 @@ function AuthPage() {
             autoComplete={mode === "signin" ? "current-password" : "new-password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-2 w-full border-2 border-foreground bg-background px-3 py-2 outline-none focus:border-primary"
+            className="mt-2 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-foreground outline-none transition-all focus:border-primary/60 focus:bg-white/[0.08] focus:shadow-[0_0_20px_rgba(255,107,0,0.2)]"
+            placeholder="••••••••"
           />
         </div>
         <button
           type="submit"
           disabled={busy}
-          className="w-full border-2 border-foreground bg-foreground px-5 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-background transition-colors hover:border-primary hover:bg-primary disabled:opacity-60"
+          className="w-full rounded-full bg-primary px-5 py-3.5 text-xs font-semibold uppercase tracking-[0.18em] text-primary-foreground shadow-[0_0_20px_rgba(255,107,0,0.4)] transition-all hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(255,107,0,0.7)] disabled:opacity-60"
         >
           {busy ? "Working…" : mode === "signin" ? "Sign in" : "Create account"}
         </button>
         <button
           type="button"
           onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-          className="w-full text-xs uppercase tracking-[0.18em] text-muted-foreground hover:text-primary"
+          className="w-full text-xs uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-primary"
         >
           {mode === "signin" ? "Need an account? Sign up" : "Have an account? Sign in"}
         </button>

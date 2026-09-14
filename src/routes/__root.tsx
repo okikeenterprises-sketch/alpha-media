@@ -4,13 +4,24 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
+import { EASE, ScrollTrigger, gsap, prefersReducedMotion, useIsomorphicLayoutEffect } from "../lib/gsap";
+import {
+  getSmooth,
+  hasSeenIntro,
+  initSmooth,
+  markIntroDone,
+  startSmooth,
+  stopSmooth,
+} from "../lib/smooth";
+import { Curtain, type CurtainHandle } from "@/components/site/curtain";
+import { Preloader } from "@/components/site/preloader";
 import { Header } from "@/components/site/header";
 import { Footer } from "@/components/site/footer";
 import { CustomCursor } from "@/components/site/cursor";
@@ -18,17 +29,17 @@ import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="font-display text-8xl">404</h1>
-        <h2 className="mt-4 text-xl font-semibold">Page not found</h2>
+    <div className="flex min-h-screen items-center justify-center px-4 py-24">
+      <div className="glass-panel w-full max-w-md rounded-3xl p-10 text-center shadow-2xl">
+        <h1 className="font-display text-8xl text-primary drop-shadow-[0_0_25px_rgba(255,107,0,0.4)]">404</h1>
+        <h2 className="mt-4 text-2xl font-medium tracking-tight">Page not found</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           The page you're looking for doesn't exist or has been moved.
         </p>
-        <div className="mt-6">
+        <div className="mt-8">
           <Link
             to="/"
-            className="inline-flex items-center justify-center border-2 border-foreground bg-foreground px-5 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-background transition-colors hover:border-primary hover:bg-primary"
+            className="glass-pill-active inline-flex items-center justify-center rounded-full px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-foreground transition-all hover:scale-105"
           >
             Go home
           </Link>
@@ -42,29 +53,29 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    console.error(error);
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="font-display text-4xl">This page didn't load</h1>
+    <div className="flex min-h-screen items-center justify-center px-4 py-24">
+      <div className="glass-panel w-full max-w-md rounded-3xl p-10 text-center shadow-2xl">
+        <h1 className="font-display text-4xl font-medium text-destructive">This page didn't load</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Something went wrong on our end. You can try refreshing or head back home.
         </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
           <button
             onClick={() => {
               router.invalidate();
               reset();
             }}
-            className="inline-flex items-center justify-center border-2 border-foreground bg-foreground px-5 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-background transition-colors hover:border-primary hover:bg-primary"
+            className="glass-pill-active inline-flex items-center justify-center rounded-full px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-foreground transition-all hover:scale-105"
           >
             Try again
           </button>
           <a
             href="/"
-            className="inline-flex items-center justify-center border-2 border-foreground px-5 py-3 text-xs font-semibold uppercase tracking-[0.18em] transition-colors hover:bg-accent"
+            className="glass-pill inline-flex items-center justify-center rounded-full px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-foreground transition-all hover:bg-white/10"
           >
             Go home
           </a>
@@ -92,8 +103,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:title", content: "Alph@ Media — Graphic Design Studio" },
       { property: "og:description", content: "Independent graphic design studio building loud brand identities, packaging, posters and motion for ambitious clients." },
       { name: "twitter:description", content: "Independent graphic design studio building loud brand identities, packaging, posters and motion for ambitious clients." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a1f4a9f040f803717f4b45ef87a4d286/id-preview-f1b66198--5e14cf0d-4e0b-4393-8022-7c72332b5ccb.lovable.app-1787140650078.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a1f4a9f040f803717f4b45ef87a4d286/id-preview-f1b66198--5e14cf0d-4e0b-4393-8022-7c72332b5ccb.lovable.app-1787140650078.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -114,12 +123,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <head>
         <HeadContent />
       </head>
-      <body>
-        {children}
+      <body className="relative min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
+        {/* Ambient Glow Lights in Background */}
+        <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+          <div className="absolute -top-40 -left-40 size-[600px] rounded-full bg-primary/10 blur-[140px]" />
+          <div className="absolute top-1/3 -right-40 size-[700px] rounded-full bg-indigo-500/10 blur-[160px]" />
+          <div className="absolute -bottom-40 left-1/4 size-[650px] rounded-full bg-amber-500/8 blur-[150px]" />
+        </div>
+        <div className="relative z-10">
+          {children}
+        </div>
         <Scripts />
       </body>
     </html>
@@ -128,17 +145,150 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+  const curtain = useRef<CurtainHandle>(null);
+  const [intro, setIntro] = useState(false);
+
+  // First visit: lock scroll and show the preloader (client only, post-hydration).
+  useIsomorphicLayoutEffect(() => {
+    if (!prefersReducedMotion() && !hasSeenIntro()) {
+      setIntro(true);
+      document.body.style.overflow = "hidden";
+    }
+  }, []);
+
+  // Lenis smooth scroll, wired directly into GSAP ticker and ScrollTrigger.
+  useEffect(() => {
+    if (prefersReducedMotion()) return;
+    const lenis = initSmooth();
+    if (!lenis) return;
+    if (!hasSeenIntro()) lenis.stop();
+
+    const onScroll = () => ScrollTrigger.update();
+    lenis.on("scroll", onScroll);
+
+    // Sync Lenis animation loop with GSAP's ticker to eliminate any pin jitter/delays
+    const tickerUpdate = (time: number) => {
+      lenis.raf(time * 1000);
+    };
+    gsap.ticker.add(tickerUpdate);
+    gsap.ticker.lagSmoothing(0);
+
+    const onLoad = () => ScrollTrigger.refresh();
+    window.addEventListener("load", onLoad);
+    // Webfont swaps shift every trigger position — re-measure once they're in.
+    document.fonts?.ready.then(onLoad).catch(() => undefined);
+    requestAnimationFrame(() => ScrollTrigger.refresh());
+
+    return () => {
+      lenis.off("scroll", onScroll);
+      gsap.ticker.remove(tickerUpdate);
+      window.removeEventListener("load", onLoad);
+    };
+  }, []);
+
+  const handleIntroDone = useCallback(() => {
+    markIntroDone();
+    setIntro(false);
+    document.body.style.overflow = "";
+    startSmooth();
+    ScrollTrigger.refresh();
+  }, []);
+
+  // Curtain transition to an internal href.
+  const go = useCallback(
+    async (href: string) => {
+      stopSmooth();
+      try {
+        await curtain.current?.play(async () => {
+          router.history.push(href);
+          await new Promise((r) => setTimeout(r, 80));
+          getSmooth()?.scrollTo(0, { immediate: true });
+          window.scrollTo(0, 0);
+        });
+      } finally {
+        startSmooth();
+      }
+    },
+    [router],
+  );
+
+  // Intercept internal link clicks → curtain transition.
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
+        return;
+      }
+      const anchor = (e.target as HTMLElement).closest?.("a[href]");
+      if (!anchor || anchor.hasAttribute("data-no-transition")) return;
+      if (anchor.getAttribute("target") === "_blank" || anchor.hasAttribute("download")) return;
+      const href = anchor.getAttribute("href");
+      if (!href || !href.startsWith("/") || href.startsWith("//")) return;
+      let url: URL;
+      try {
+        url = new URL(href, window.location.origin);
+      } catch {
+        return;
+      }
+      if (url.pathname === window.location.pathname && !url.search) return;
+      e.preventDefault();
+      void go(url.pathname + url.search + url.hash);
+    };
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
+  }, [go]);
 
   return (
     <QueryClientProvider client={queryClient}>
       <CustomCursor />
       <Header />
-      <main className="pt-[86px]">
+      <main className="pt-24 md:pt-28">
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <Outlet />
+        <PageTransition>
+          <Outlet />
+        </PageTransition>
       </main>
       <Footer />
       <Toaster />
+      <Curtain ref={curtain} />
+      {intro && <Preloader onDone={handleIntroDone} />}
     </QueryClientProvider>
   );
+}
+
+/** Page-enter animation on every navigation + ScrollTrigger housekeeping. Opacity-only to avoid CSS transform on parent. */
+function PageTransition({ children }: { children: ReactNode }) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onLoad = () => ScrollTrigger.refresh();
+    window.addEventListener("load", onLoad);
+    return () => window.removeEventListener("load", onLoad);
+  }, []);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || prefersReducedMotion()) return;
+    const tw = gsap.fromTo(
+      el,
+      { autoAlpha: 0 },
+      {
+        autoAlpha: 1,
+        duration: 0.35,
+        ease: "power2.out",
+        overwrite: "auto",
+        onComplete: () => {
+          gsap.set(el, { clearProps: "all" });
+          ScrollTrigger.refresh();
+        },
+      },
+    );
+    return () => {
+      tw.kill();
+      gsap.set(el, { clearProps: "all" });
+    };
+  }, [pathname]);
+
+  return <div ref={ref}>{children}</div>;
 }

@@ -22,6 +22,7 @@ import {
   Layers,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { BioEditor } from "@/components/admin/bio-editor";
 import {
   deleteProject,
   ensureAdminRole,
@@ -90,6 +91,7 @@ function AdminPage() {
   const [status, setStatus] = useState<StatusFilter>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [dirty, setDirty] = useState(false);
+  const [tab, setTab] = useState<"projects" | "bio">("projects");
 
   useEffect(() => {
     grantAdmin({ data: undefined }).catch(() => undefined);
@@ -264,8 +266,23 @@ function AdminPage() {
             Studio dashboard
           </p>
           <h1 className="mt-3 font-display text-5xl leading-none md:text-7xl">
-            Manage <span className="italic text-primary">work</span>
+            Studio <span className="italic text-primary">dashboard</span>
           </h1>
+          <div className="mt-5 flex gap-2">
+            {(["projects", "bio"] as const).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTab(t)}
+                className={cn(
+                  "border-2 border-foreground px-5 py-2 text-xs font-semibold uppercase tracking-[0.18em]",
+                  tab === t ? "bg-foreground text-background" : "hover:bg-accent",
+                )}
+              >
+                {t === "projects" ? "Projects" : "Bio"}
+              </button>
+            ))}
+          </div>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link
@@ -299,15 +316,17 @@ function AdminPage() {
         </p>
       )}
 
-      <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <Stat icon={FolderOpen} label="Projects" value={stats.total} />
-        <Stat icon={CheckCircle2} label="Published" value={stats.published} />
-        <Stat icon={EyeOff} label="Drafts" value={stats.drafts} />
-        <Stat icon={Images} label="Images" value={stats.images} />
-        <Stat icon={Layers} label="Categories" value={stats.cats} />
-      </div>
+      {tab === "projects" ? (
+        <>
+          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <Stat icon={FolderOpen} label="Projects" value={stats.total} />
+            <Stat icon={CheckCircle2} label="Published" value={stats.published} />
+            <Stat icon={EyeOff} label="Drafts" value={stats.drafts} />
+            <Stat icon={Images} label="Images" value={stats.images} />
+            <Stat icon={Layers} label="Categories" value={stats.cats} />
+          </div>
 
-      <div className="mt-10 grid gap-10 lg:grid-cols-[380px_1fr]">
+          <div className="mt-10 grid gap-10 lg:grid-cols-[380px_1fr]">
         <aside className="space-y-4">
           <div className="flex items-center gap-2 border-2 border-foreground px-3 py-2">
             <Search className="size-4 shrink-0 opacity-60" />
@@ -680,6 +699,10 @@ function AdminPage() {
           </div>
         </form>
       </div>
+        </>
+      ) : (
+        <BioEditor />
+      )}
     </div>
   );
 }

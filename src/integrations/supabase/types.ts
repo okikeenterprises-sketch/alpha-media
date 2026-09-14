@@ -80,6 +80,63 @@ export type Database = {
         }
         Relationships: []
       }
+      site_profile: {
+        Row: {
+          availability: string
+          bio: string
+          created_at: string
+          email: string
+          id: number
+          intro: string
+          location: string
+          name: string
+          portrait: string
+          principles: Json
+          role_title: string
+          services: Json
+          socials: Json
+          timeline: Json
+          toolkit: Json
+          updated_at: string
+        }
+        Insert: {
+          availability?: string
+          bio?: string
+          created_at?: string
+          email?: string
+          id?: number
+          intro?: string
+          location?: string
+          name?: string
+          portrait?: string
+          principles?: Json
+          role_title?: string
+          services?: Json
+          socials?: Json
+          timeline?: Json
+          toolkit?: Json
+          updated_at?: string
+        }
+        Update: {
+          availability?: string
+          bio?: string
+          created_at?: string
+          email?: string
+          id?: number
+          intro?: string
+          location?: string
+          name?: string
+          portrait?: string
+          principles?: Json
+          role_title?: string
+          services?: Json
+          socials?: Json
+          timeline?: Json
+          toolkit?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

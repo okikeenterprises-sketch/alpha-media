@@ -29,7 +29,11 @@ export const listPublishedProjects = createServerFn({ method: "GET" }).handler(a
     .select("*")
     .eq("published", true)
     .order("sort_order", { ascending: true });
-  if (error) throw error;
+  // Pre-migration: table missing → empty archive instead of a 500.
+  if (error) {
+    if (error.code === "PGRST205" || error.code === "42P01") return [];
+    throw error;
+  }
   return (data ?? []).map((row) => mapRow(row));
 });
 
@@ -55,7 +59,10 @@ export const listAdminProjects = createServerFn({ method: "GET" })
       .from("projects")
       .select("*")
       .order("sort_order", { ascending: true });
-    if (error) throw error;
+    if (error) {
+      if (error.code === "PGRST205" || error.code === "42P01") return [];
+      throw error;
+    }
     return (data ?? []).map((row) => mapRow(row, false));
   });
 

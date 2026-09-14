@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useRef } from "react";
 import { Check } from "lucide-react";
 import { Reveal } from "@/components/site/reveal";
 import { Magnetic } from "@/components/site/magnetic";
 import { Marquee } from "@/components/site/marquee";
+import { ScrollRail } from "@/components/site/scroll-rail";
 
 export const Route = createFileRoute("/services")({
   head: () => ({
@@ -78,13 +80,30 @@ const disciplines = [
 ];
 
 const process = [
-  { step: "01", title: "Interrogate", body: "Brief, audience, competitors, and the one thing you should be known for." },
-  { step: "02", title: "Build", body: "Two directions max. Real applications, not floating logos on grey." },
-  { step: "03", title: "Stress-test", body: "Tiny, huge, embroidered, one colour, on a bottle, on a phone." },
-  { step: "04", title: "Hand over", body: "Organised files, guidelines, and a walkthrough with your team." },
+  {
+    step: "01",
+    title: "Interrogate",
+    body: "Brief, audience, competitors, and the one thing you should be known for.",
+  },
+  {
+    step: "02",
+    title: "Build",
+    body: "Two directions max. Real applications, not floating logos on grey.",
+  },
+  {
+    step: "03",
+    title: "Stress-test",
+    body: "Tiny, huge, embroidered, one colour, on a bottle, on a phone.",
+  },
+  {
+    step: "04",
+    title: "Hand over",
+    body: "Organised files, guidelines, and a walkthrough with your team.",
+  },
 ];
 
 function ServicesPage() {
+  const processRef = useRef<HTMLOListElement>(null);
   return (
     <div>
       <section className="mx-auto max-w-[1600px] px-5 py-16 md:px-10 md:py-24">
@@ -105,33 +124,33 @@ function ServicesPage() {
       <Marquee items={["Identity", "Packaging", "Posters", "Motion", "Editorial"]} reverse />
 
       <section className="mx-auto max-w-[1600px] px-5 py-20 md:px-10">
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-8 md:grid-cols-3">
           {tiers.map((tier, i) => (
             <Reveal key={tier.name} delay={i * 0.08}>
               <div
                 className={
                   tier.featured
-                    ? "flex h-full flex-col border-2 border-foreground bg-foreground p-7 text-background"
-                    : "flex h-full flex-col border-2 border-foreground p-7"
+                    ? "relative flex h-full flex-col rounded-3xl border border-primary/50 bg-gradient-to-b from-primary/15 via-white/[0.03] to-black/60 p-8 shadow-[0_0_40px_rgba(255,107,0,0.25)] backdrop-blur-xl"
+                    : "glass-card-interactive flex h-full flex-col rounded-3xl p-8"
                 }
               >
                 <div className="flex items-start justify-between gap-4">
-                  <h2 className="font-display text-4xl leading-none">{tier.name}</h2>
+                  <h2 className="font-display text-4xl leading-none text-foreground">{tier.name}</h2>
                   {tier.featured && (
-                    <span className="border-2 border-background px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em]">
+                    <span className="rounded-full border border-primary/40 bg-primary/20 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary shadow-[0_0_12px_rgba(255,107,0,0.3)]">
                       Most picked
                     </span>
                   )}
                 </div>
-                <p className="mt-4 text-2xl font-semibold">{tier.price}</p>
-                <p className="mt-1 text-xs font-semibold uppercase tracking-[0.2em] opacity-70">
+                <p className="mt-4 text-3xl font-semibold text-primary">{tier.price}</p>
+                <p className="mt-1 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                   {tier.timeline}
                 </p>
-                <p className="mt-5 text-base leading-relaxed">{tier.summary}</p>
-                <ul className="mt-6 space-y-3 border-t-2 border-current pt-6 text-sm">
+                <p className="mt-5 text-base leading-relaxed text-muted-foreground">{tier.summary}</p>
+                <ul className="mt-6 space-y-3 border-t border-white/10 pt-6 text-sm text-foreground/90">
                   {tier.includes.map((item) => (
                     <li key={item} className="flex gap-3">
-                      <Check className="mt-0.5 size-4 shrink-0 text-primary" />
+                      <Check className="mt-0.5 size-4 shrink-0 text-primary drop-shadow-[0_0_6px_rgba(255,107,0,0.6)]" />
                       <span>{item}</span>
                     </li>
                   ))}
@@ -139,8 +158,8 @@ function ServicesPage() {
                 <div className="mt-8 pt-2">
                   <Magnetic
                     to="/contact"
-                    variant={tier.featured ? "outline" : "solid"}
-                    className={tier.featured ? "border-background text-background" : ""}
+                    variant={tier.featured ? "solid" : "outline"}
+                    className="w-full"
                   >
                     Enquire
                   </Magnetic>
@@ -151,34 +170,35 @@ function ServicesPage() {
         </div>
       </section>
 
-      <section className="border-y-2 border-foreground">
-        <div className="mx-auto max-w-[1600px] px-5 py-20 md:px-10">
-          <Reveal>
-            <h2 className="font-display text-5xl leading-none md:text-7xl">Disciplines</h2>
-          </Reveal>
-          <div className="mt-10 grid gap-px border-2 border-foreground bg-foreground md:grid-cols-3">
-            {disciplines.map((d) => (
-              <div key={d.title} className="bg-background p-7 transition-colors hover:bg-accent">
-                <h3 className="font-display text-3xl leading-none">{d.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{d.body}</p>
-              </div>
-            ))}
-          </div>
+      {/* Disciplines Grid */}
+      <section className="mx-auto max-w-[1600px] px-5 py-20 md:px-10">
+        <Reveal>
+          <h2 className="font-display text-5xl leading-none md:text-7xl">Disciplines</h2>
+        </Reveal>
+        <div className="mt-10 grid gap-6 md:grid-cols-3">
+          {disciplines.map((d) => (
+            <div key={d.title} className="glass-card-interactive rounded-3xl p-8">
+              <h3 className="font-display text-3xl leading-none text-foreground">{d.title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{d.body}</p>
+            </div>
+          ))}
         </div>
       </section>
 
+      {/* Process Section */}
       <section className="mx-auto max-w-[1600px] px-5 py-20 md:px-10">
         <Reveal>
           <h2 className="font-display text-5xl leading-none md:text-7xl">
-            The <span className="italic text-primary">process</span>
+            The <span className="italic text-primary drop-shadow-[0_0_12px_rgba(255,107,0,0.4)]">process</span>
           </h2>
         </Reveal>
-        <ol className="mt-10 space-y-0">
+        <ol ref={processRef} className="relative mt-10 space-y-0 pl-8 md:pl-12">
+          <ScrollRail target={processRef} />
           {process.map((p, i) => (
             <Reveal key={p.step} delay={i * 0.06}>
-              <li className="grid gap-4 border-t-2 border-foreground py-8 md:grid-cols-[120px_1fr_1.4fr]">
-                <span className="font-display text-4xl text-primary">{p.step}</span>
-                <h3 className="font-display text-3xl leading-none">{p.title}</h3>
+              <li className="grid gap-4 border-t border-white/10 py-8 md:grid-cols-[120px_1fr_1.4fr]">
+                <span className="font-display text-4xl text-primary drop-shadow-[0_0_10px_rgba(255,107,0,0.5)]">{p.step}</span>
+                <h3 className="font-display text-3xl leading-none text-foreground">{p.title}</h3>
                 <p className="text-base leading-relaxed text-muted-foreground">{p.body}</p>
               </li>
             </Reveal>
@@ -186,12 +206,16 @@ function ServicesPage() {
         </ol>
       </section>
 
-      <section className="border-t-2 border-foreground bg-accent text-accent-foreground">
-        <div className="mx-auto flex max-w-[1600px] flex-col items-start gap-8 px-5 py-20 md:flex-row md:items-center md:justify-between md:px-10">
-          <h2 className="font-display text-5xl leading-[0.9] md:text-7xl">
-            Not sure which tier fits?
-          </h2>
-          <Magnetic to="/contact">Send the brief</Magnetic>
+      {/* CTA Glass Banner */}
+      <section className="mx-auto max-w-[1600px] px-5 py-12 md:px-10">
+        <div className="glass-panel relative overflow-hidden rounded-3xl border border-primary/30 p-10 shadow-[0_0_40px_rgba(255,107,0,0.15)] md:p-16">
+          <div className="pointer-events-none absolute -right-20 -top-20 size-80 rounded-full bg-primary/20 blur-[100px]" />
+          <div className="relative z-10 flex flex-col items-start gap-8 md:flex-row md:items-center md:justify-between">
+            <h2 className="font-display text-5xl leading-[0.9] md:text-7xl">
+              Not sure which tier fits?
+            </h2>
+            <Magnetic to="/contact">Send the brief</Magnetic>
+          </div>
         </div>
       </section>
     </div>
